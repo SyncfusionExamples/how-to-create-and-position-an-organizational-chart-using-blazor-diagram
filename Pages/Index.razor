@@ -1,0 +1,86 @@
+﻿@page "/"
+
+<SfDiagramComponent Width="1200px" Height="800px" ConnectorCreating="ConnectorCreate"
+                                   NodeCreating="NodeCreate">
+    <DataSourceSettings DataSource="@DiagramDataSource" ID="Id" ParentID="Manager"></DataSourceSettings> 
+    <Layout Type="LayoutType.OrganizationalChart" HorizontalSpacing="50" VerticalSpacing="50"
+                        Orientation="LayoutOrientation.BottomToTop" GetLayoutInfo="GetLayoutInfo"></Layout>
+</SfDiagramComponent>
+
+
+@code{
+    public class HierarchyDetails
+    {
+        public string Id { get; set; }
+        public string Role { get; set; }
+        public string Manager { get; set; }
+        public string Color { get; set; }
+    }
+
+    public List<HierarchyDetails> DiagramDataSource = new List<HierarchyDetails>()
+    {
+        new HierarchyDetails()   { Id= "parent", Role= "Board", Color= "#71AF17" },
+        new HierarchyDetails()   { Id= "1", Role= "General Manager", Manager= "parent", Color= "#71AF17" },
+        new HierarchyDetails()   { Id= "11", Role= "Assistant Manager", Manager= "1", Color= "#71AF17" },
+        new HierarchyDetails()   { Id= "2", Role= "Human Resource Manager", Manager= "1", Color= "#1859B7" },
+        new HierarchyDetails()   { Id= "3", Role= "Trainers", Manager= "2", Color= "#2E95D8" },
+        new HierarchyDetails()   { Id= "4", Role= "Recruiting Team", Manager= "2", Color= "#2E95D8" },
+        new HierarchyDetails()   { Id= "5", Role= "Finance Asst. Manager", Manager= "2", Color= "#2E95D8" },
+        new HierarchyDetails()   { Id= "6", Role= "Design Manager", Manager= "1", Color= "#1859B7" },
+        new HierarchyDetails()   { Id= "7", Role= "Design Supervisor", Manager= "6", Color= "#2E95D8" },
+        new HierarchyDetails()   { Id= "8", Role= "Development Supervisor", Manager= "6", Color= "#2E95D8" },
+        new HierarchyDetails()   { Id= "9", Role= "Drafting Supervisor", Manager= "6", Color= "#2E95D8" },
+        new HierarchyDetails()   { Id= "10", Role= "Operation Manager", Manager= "1", Color= "#1859B7" },
+        new HierarchyDetails()   { Id= "11", Role= "Statistic Department", Manager= "10", Color= "#2E95D8" },
+        new HierarchyDetails()   { Id= "12", Role= "Logistic Department", Manager= "10", Color= "#2E95D8" },
+        new HierarchyDetails()   { Id= "16", Role= "Marketing Manager", Manager= "1", Color= "#1859B7" },
+        new HierarchyDetails()   { Id= "17", Role= "Oversea sales Manager", Manager= "16", Color= "#2E95D8" },
+        new HierarchyDetails()   { Id= "18", Role= "Petroleum Manager", Manager= "16", Color= "#2E95D8" },
+        new HierarchyDetails()   { Id= "20", Role= "Service Dept. Manager", Manager= "16", Color= "#2E95D8" },
+        new HierarchyDetails()   { Id= "21", Role= "Quality Department", Manager= "16", Color= "#2E95D8" }
+
+    };
+    private void NodeCreate(IDiagramObject obj)
+    {
+        Node NewNode = obj as Node;
+        if (NewNode.Data is System.Text.Json.JsonElement)
+        {
+            NewNode.Data = System.Text.Json.JsonSerializer.Deserialize<HierarchyDetails>(NewNode.Data.ToString());
+        }
+        HierarchyDetails HierarchyData = NewNode.Data as HierarchyDetails;
+        NewNode.Height = 50;
+        NewNode.Width = 150;
+        NewNode.Style.Fill = HierarchyData.Color;
+        NewNode.Annotations = new DiagramObjectCollection<ShapeAnnotation>()
+        {
+            new ShapeAnnotation()
+            {
+                Content = HierarchyData.Role
+            }
+        };
+    }
+    private void ConnectorCreate(IDiagramObject connector)
+    {
+        (connector as Connector).Type = ConnectorSegmentType.Orthogonal;
+    }
+
+    private TreeInfo GetLayoutInfo(IDiagramObject obj, TreeInfo options)
+    {
+        Node new_node = obj as Node;
+        if ((new_node.Data as HierarchyDetails).Role == "General Manager")
+        {
+            options.Assistants.Add(options.Children[0]);
+            options.Children.RemoveAt(0);
+        }
+        if (!options.HasSubTree)
+        {
+            
+            options.AlignmentType = SubTreeAlignmentType.Left;
+            options.Orientation = Orientation.Vertical;
+            options.Offset = 20;
+        }
+        return options;
+    }
+        
+
+}
